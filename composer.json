@@ -1,11 +1,14 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/react-starter-kit",
+    "name": "wechi/expense-tracker",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "Wechi - A simple and intuitive expense tracking web application built with Laravel and React.",
     "keywords": [
         "laravel",
-        "framework"
+        "react",
+        "expense-tracker",
+        "finance",
+        "budget"
     ],
     "license": "MIT",
     "require": {

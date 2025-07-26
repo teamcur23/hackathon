@@ -1,10 +1,10 @@
 import React from 'react'
-import { Mail, SendHorizonal } from 'lucide-react'
+import { DollarSign, TrendingUp, BarChart3 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { TextEffect } from '@/components/ui/text-effect'
 import { AnimatedGroup } from '@/components/ui/animated-group'
 import { HeroHeader } from './header'
-import { LogoCloud } from './logo-cloud'
+import { Link } from '@inertiajs/react'
 
 const transitionVariants = {
     item: {
@@ -18,7 +18,7 @@ const transitionVariants = {
             filter: 'blur(0px)',
             y: 0,
             transition: {
-                type: 'spring',
+                type: 'spring' as const,
                 bounce: 0.3,
                 duration: 1.5,
             },
@@ -40,7 +40,7 @@ export default function HeroSection() {
                                 speedSegment={0.3}
                                 as="h1"
                                 className="text-balance text-5xl font-medium md:text-6xl">
-                                Healthier daily routine
+                                Track Your Expenses
                             </TextEffect>
                             <TextEffect
                                 per="line"
@@ -49,7 +49,7 @@ export default function HeroSection() {
                                 delay={0.5}
                                 as="p"
                                 className="mx-auto mt-6 max-w-2xl text-pretty text-lg">
-                                Tailwindcss highly customizable components for building modern websites and applications that look and feel the way you mean it.
+                                Wechi helps you manage your finances with ease. Track expenses, analyze spending patterns, and take control of your budget with our simple and intuitive interface.
                             </TextEffect>
 
                             <AnimatedGroup
@@ -65,32 +65,26 @@ export default function HeroSection() {
                                     ...transitionVariants,
                                 }}
                                 className="mt-12">
-                                <form
-                                    action=""
-                                    className="mx-auto max-w-sm">
-                                    <div className="bg-background has-[input:focus]:ring-muted relative grid grid-cols-[1fr_auto] items-center rounded-[calc(var(--radius)+0.5rem)] border pr-2 shadow shadow-zinc-950/5 has-[input:focus]:ring-2">
-                                        <Mail className="pointer-events-none absolute inset-y-0 left-4 my-auto size-4" />
-
-                                        <input
-                                            placeholder="Your mail address"
-                                            className="h-12 w-full bg-transparent pl-12 focus:outline-none"
-                                            type="email"
-                                        />
-
-                                        <div className="md:pr-1.5 lg:pr-0">
-                                            <Button
-                                                aria-label="submit"
-                                                size="sm"
-                                                className="rounded-(--radius)">
-                                                <span className="hidden md:block">Get Started</span>
-                                                <SendHorizonal
-                                                    className="relative mx-auto size-5 md:hidden"
-                                                    strokeWidth={2}
-                                                />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </form>
+                                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                                    <Button
+                                        asChild
+                                        size="lg"
+                                        className="rounded-lg">
+                                        <Link href="/dashboard">
+                                            <DollarSign className="mr-2 h-5 w-5" />
+                                            Get Started
+                                        </Link>
+                                    </Button>
+                                    <Button
+                                        asChild
+                                        variant="outline"
+                                        size="lg"
+                                        className="rounded-lg">
+                                        <Link href="/login">
+                                            Sign In
+                                        </Link>
+                                    </Button>
+                                </div>
 
                                 <div
                                     aria-hidden
@@ -100,7 +94,7 @@ export default function HeroSection() {
                                     </div>
                                     <div className="bg-muted dark:bg-background/50 border-border/50 mx-auto w-80 translate-x-4 rounded-[2rem] border p-2 backdrop-blur-3xl [mask-image:linear-gradient(to_bottom,#000_50%,transparent_90%)] sm:translate-x-8">
                                         <div className="bg-background space-y-2 overflow-hidden rounded-[1.5rem] border p-2 shadow-xl dark:bg-white/5 dark:shadow-black dark:backdrop-blur-3xl">
-                                            <AppComponent />
+                                            <ExpenseTrackerComponent />
 
                                             <div className="bg-muted rounded-[1rem] p-4 pb-16 dark:bg-white/5"></div>
                                         </div>
@@ -111,50 +105,39 @@ export default function HeroSection() {
                         </div>
                     </div>
                 </section>
-                {/* <LogoCloud /> */}
             </main>
         </>
     )
 }
 
-const AppComponent = () => {
+const ExpenseTrackerComponent = () => {
     return (
         <div className="relative space-y-3 rounded-[1rem] bg-white/5 p-4">
-            <div className="flex items-center gap-1.5 text-orange-400">
-                <svg
-                    className="size-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="1em"
-                    height="1em"
-                    viewBox="0 0 32 32">
-                    <g fill="none">
-                        <path
-                            fill="#ff6723"
-                            d="M26 19.34c0 6.1-5.05 11.005-11.15 10.641c-6.269-.374-10.56-6.403-9.752-12.705c.489-3.833 2.286-7.12 4.242-9.67c.34-.445.689 3.136 1.038 2.742c.35-.405 3.594-6.019 4.722-7.991a.694.694 0 0 1 1.028-.213C18.394 3.854 26 10.277 26 19.34"></path>
-                        <path
-                            fill="#ffb02e"
-                            d="M23 21.851c0 4.042-3.519 7.291-7.799 7.144c-4.62-.156-7.788-4.384-7.11-8.739C9.07 14.012 15.48 10 15.48 10S23 14.707 23 21.851"></path>
-                    </g>
-                </svg>
-                <div className="text-sm font-medium">Steps</div>
+            <div className="flex items-center gap-1.5 text-green-400">
+                <DollarSign className="size-5" />
+                <div className="text-sm font-medium">Monthly Overview</div>
             </div>
             <div className="space-y-3">
-                <div className="text-foreground border-b border-white/10 pb-3 text-sm font-medium">This year, you're walking more on average than you did in 2023.</div>
+                <div className="text-foreground border-b border-white/10 pb-3 text-sm font-medium">Your spending is 15% lower than last month. Great job!</div>
                 <div className="space-y-3">
                     <div className="space-y-1">
                         <div className="space-x-1">
-                            <span className="text-foreground align-baseline text-xl font-medium">8,081</span>
-                            <span className="text-muted-foreground text-xs">Steps/day</span>
+                            <span className="text-foreground align-baseline text-xl font-medium">$1,247</span>
+                            <span className="text-muted-foreground text-xs">This month</span>
                         </div>
-                        <div className="flex h-5 items-center rounded bg-gradient-to-l from-emerald-400 to-indigo-600 px-2 text-xs text-white">2024</div>
+                        <div className="flex h-5 items-center rounded bg-gradient-to-l from-green-400 to-blue-600 px-2 text-xs text-white">Current</div>
                     </div>
                     <div className="space-y-1">
                         <div className="space-x-1">
-                            <span className="text-foreground align-baseline text-xl font-medium">5,412</span>
-                            <span className="text-muted-foreground text-xs">Steps/day</span>
+                            <span className="text-foreground align-baseline text-xl font-medium">$1,468</span>
+                            <span className="text-muted-foreground text-xs">Last month</span>
                         </div>
-                        <div className="text-foreground bg-muted flex h-5 w-2/3 items-center rounded px-2 text-xs dark:bg-white/20">2023</div>
+                        <div className="text-foreground bg-muted flex h-5 w-2/3 items-center rounded px-2 text-xs dark:bg-white/20">Previous</div>
                     </div>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-green-400">
+                    <TrendingUp className="size-3" />
+                    <span>15% savings</span>
                 </div>
             </div>
         </div>

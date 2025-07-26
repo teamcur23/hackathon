@@ -1,4 +1,5 @@
 {
+    "name": "wechi-expense-tracker",
     "private": true,
     "type": "module",
     "scripts": {
