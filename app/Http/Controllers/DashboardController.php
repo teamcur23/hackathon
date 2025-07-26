@@ -77,7 +77,7 @@ class DashboardController extends Controller
             $stats = $this->calculateDashboardStats($currentSummary, $previousSummary, $userId);
 
             // Get categories
-            $categories = Category::active()->get()->map(function ($category) {
+            $categories = Category::get()->map(function ($category) {
                 return [
                     'id' => $category->id,
                     'name' => $category->name,

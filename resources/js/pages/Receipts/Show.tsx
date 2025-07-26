@@ -73,7 +73,7 @@ export default function ReceiptShow({ receipt }: ReceiptShowProps) {
         if (amount === null) return "Processing..."
         return new Intl.NumberFormat("en-US", {
             style: "currency",
-            currency: "USD",
+            currency: "ETB",
         }).format(amount)
     }
 
@@ -102,7 +102,7 @@ export default function ReceiptShow({ receipt }: ReceiptShowProps) {
                             <p className="text-muted-foreground">Uploaded on {formatDateTime(receipt.created_at)}</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col items-center gap-2">
                         <Button variant="outline" onClick={() => router.get(`/receipts/${receipt.id}/edit`)}>
                             <Edit className="h-4 w-4 mr-2" />
                             Edit
@@ -233,7 +233,7 @@ export default function ReceiptShow({ receipt }: ReceiptShowProps) {
                                                     <p className="font-medium">{item.name}</p>
                                                     {item.quantity && <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>}
                                                 </div>
-                                                {item.price && <p className="font-medium">${item.price.toFixed(2)}</p>}
+                                                {item.price && <p className="font-medium">ETB {item.price.toFixed(2)}</p>}
                                             </div>
                                         ))}
                                     </div>

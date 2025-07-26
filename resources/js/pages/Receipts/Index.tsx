@@ -99,7 +99,7 @@ export default function ReceiptsIndex({ receipts, categories, filters, message }
         if (amount === null) return "Processing..."
         return new Intl.NumberFormat("en-US", {
             style: "currency",
-            currency: "USD",
+            currency: "ETB",
         }).format(amount)
     }
 
@@ -140,7 +140,7 @@ export default function ReceiptsIndex({ receipts, categories, filters, message }
 
                 {/* Filters */}
                 <Card>
-                    <CardContent className="p-4">
+                    <CardContent className="p-4 border-none shadow-none">
                         <div className="flex flex-col gap-4 md:flex-row md:items-center">
                             <div className="flex-1">
                                 <div className="relative">

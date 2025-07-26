@@ -108,6 +108,8 @@ Rules:
 4. Amount should be the total amount paid
 5. Date should be the transaction date, not today's date
 6. Confidence should reflect how certain you are about the extracted data
+7. The price is in ETB never in USD even if you scan USD receipts
+8. If the receipt is not in Amharic or English, translate it to English before analyzing
 
 Analyze the receipt now:";
     }

@@ -169,7 +169,7 @@ export default function Dashboard({
                 {/* Main Content Grid */}
                 <div className="grid gap-6 md:grid-cols-3">
                     {/* Recent Receipts */}
-                    <div className="md:col-span-2">
+                    <div className="md:col-span-2 w-full max-w-sm sm:max-w-full">
                         <Card>
                             <CardHeader>
                                 <CardTitle>Recent Receipts</CardTitle>

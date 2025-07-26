@@ -9,6 +9,7 @@ use App\Models\Receipt;
 use App\Models\MonthlySummary;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -144,7 +145,7 @@ class ReceiptController extends Controller
 
             return back()->with('message', 'Receipt deleted successfully.');
         } catch (\Exception $e) {
-            \Log::error('Receipt deletion failed', [
+            Log::error('Receipt deletion failed', [
                 'receipt_id' => $receipt->id,
                 'error' => $e->getMessage()
             ]);
@@ -168,6 +169,6 @@ class ReceiptController extends Controller
         $receipt->update(['status' => 'pending']);
         ProcessReceiptJob::dispatch($receipt);
 
-        return back()->with('message', 'Receipt reprocessing started.');
+        return back()->with('success', 'Receipt reprocessing started.');
     }
 }
