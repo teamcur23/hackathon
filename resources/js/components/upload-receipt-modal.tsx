@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useCallback, useRef, useEffect } from "react"
+import { useState, useCallback } from "react"
 import { router } from "@inertiajs/react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Upload, X, Check, Loader2, Camera, FileImage, AlertCircle, CameraOff, RotateCcw } from "lucide-react"
+import { Upload, X, Check, Loader2, Camera, FileImage, AlertCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Category } from "@/types"
 import { toast } from "sonner"
@@ -44,14 +44,6 @@ export function UploadReceiptModal({ open, onOpenChange, categories = [] }: Uplo
     const [notes, setNotes] = useState("")
     const [error, setError] = useState<string | null>(null)
     const [receiptId, setReceiptId] = useState<number | null>(null)
-
-    // Camera states
-    const [showCamera, setShowCamera] = useState(false)
-    const [stream, setStream] = useState<MediaStream | null>(null)
-    const [isCameraLoading, setIsCameraLoading] = useState(false)
-    const [capturedImage, setCapturedImage] = useState<string | null>(null)
-    const videoRef = useRef<HTMLVideoElement>(null)
-    const canvasRef = useRef<HTMLCanvasElement>(null)
 
     const handleDrag = useCallback((e: React.DragEvent) => {
         e.preventDefault()
@@ -91,79 +83,6 @@ export function UploadReceiptModal({ open, onOpenChange, categories = [] }: Uplo
         setPreviewUrl(url)
 
         await uploadAndAnalyze(file)
-    }
-
-    // Camera functions
-    const startCamera = async () => {
-        setIsCameraLoading(true)
-        setError(null)
-
-        try {
-            const mediaStream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    facingMode: 'environment', // Use back camera if available
-                    width: { ideal: 1920 },
-                    height: { ideal: 1080 }
-                }
-            })
-
-            setStream(mediaStream)
-            if (videoRef.current) {
-                videoRef.current.srcObject = mediaStream
-            }
-            setShowCamera(true)
-        } catch (err) {
-            console.error('Error accessing camera:', err)
-            setError('Unable to access camera. Please check permissions and try again.')
-        } finally {
-            setIsCameraLoading(false)
-        }
-    }
-
-    const stopCamera = () => {
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop())
-            setStream(null)
-        }
-        setShowCamera(false)
-        setCapturedImage(null)
-    }
-
-    const captureImage = () => {
-        if (videoRef.current && canvasRef.current) {
-            const video = videoRef.current
-            const canvas = canvasRef.current
-            const context = canvas.getContext('2d')
-
-            if (context) {
-                // Set canvas size to match video
-                canvas.width = video.videoWidth
-                canvas.height = video.videoHeight
-
-                // Draw the video frame to canvas
-                context.drawImage(video, 0, 0, canvas.width, canvas.height)
-
-                // Convert to blob and create file
-                canvas.toBlob((blob) => {
-                    if (blob) {
-                        const file = new File([blob], `receipt-${Date.now()}.jpg`, {
-                            type: 'image/jpeg'
-                        })
-
-                        const imageUrl = URL.createObjectURL(blob)
-                        setCapturedImage(imageUrl)
-                        setPreviewUrl(imageUrl)
-                        setUploadedFile(file)
-
-                        // Stop camera after capture
-                        stopCamera()
-
-                        // Upload the captured image
-                        uploadAndAnalyze(file)
-                    }
-                }, 'image/jpeg', 0.9)
-            }
-        }
     }
 
     const uploadAndAnalyze = async (file: File) => {
@@ -272,13 +191,8 @@ export function UploadReceiptModal({ open, onOpenChange, categories = [] }: Uplo
         setError(null)
         setNotes("")
         setReceiptId(null)
-        setCapturedImage(null)
-        stopCamera()
         if (previewUrl) {
             URL.revokeObjectURL(previewUrl)
-        }
-        if (capturedImage) {
-            URL.revokeObjectURL(capturedImage)
         }
     }
 
@@ -307,21 +221,12 @@ export function UploadReceiptModal({ open, onOpenChange, categories = [] }: Uplo
         return new Date(dateString).toLocaleDateString()
     }
 
-    // Cleanup camera on unmount
-    useEffect(() => {
-        return () => {
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop())
-            }
-        }
-    }, [stream])
-
     return (
         <Dialog open={open} onOpenChange={handleClose}>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Analyze New Receipt</DialogTitle>
-                    <DialogDescription>Upload a receipt image or capture one with your camera</DialogDescription>
+                    <DialogDescription>Upload a receipt image and let AI extract the details automatically</DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-6">
@@ -334,112 +239,38 @@ export function UploadReceiptModal({ open, onOpenChange, categories = [] }: Uplo
 
                     {!uploadedFile ? (
                         <div className="space-y-4">
-                            {/* Camera Capture Section */}
-                            {showCamera ? (
-                                <div className="space-y-4">
-                                    <div className="relative border rounded-lg overflow-hidden">
-                                        <video
-                                            ref={videoRef}
-                                            autoPlay
-                                            playsInline
-                                            muted
-                                            className="w-full h-64 object-cover"
-                                        />
-                                        <canvas ref={canvasRef} className="hidden" />
-
-                                        {/* Camera Controls */}
-                                        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-4">
-                                            <Button
-                                                variant="outline"
-                                                size="icon"
-                                                className="bg-background/80 backdrop-blur-sm"
-                                                onClick={stopCamera}
-                                            >
-                                                <CameraOff className="h-4 w-4" />
-                                            </Button>
-
-                                            <Button
-                                                size="icon"
-                                                className="h-12 w-12 rounded-full bg-primary hover:bg-primary/90"
-                                                onClick={captureImage}
-                                            >
-                                                <Camera className="h-6 w-6" />
-                                            </Button>
-                                        </div>
+                            <div
+                                className={cn(
+                                    "relative border-2 border-dashed rounded-lg p-8 text-center transition-colors",
+                                    dragActive
+                                        ? "border-primary bg-primary/5"
+                                        : "border-muted-foreground/25 hover:border-muted-foreground/50",
+                                )}
+                                onDragEnter={handleDrag}
+                                onDragLeave={handleDrag}
+                                onDragOver={handleDrag}
+                                onDrop={handleDrop}
+                            >
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleFileInput}
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                    disabled={isUploading}
+                                />
+                                <div className="flex flex-col items-center gap-4">
+                                    <div className="flex items-center gap-2">
+                                        <Upload className="h-8 w-8 text-muted-foreground" />
+                                        <Camera className="h-8 w-8 text-muted-foreground" />
+                                        <FileImage className="h-8 w-8 text-muted-foreground" />
                                     </div>
-
-                                    <div className="text-center">
-                                        <p className="text-sm text-muted-foreground">
-                                            Position your receipt in the frame and tap the camera button to capture
-                                        </p>
+                                    <div>
+                                        <p className="text-lg font-medium">Drop your receipt here</p>
+                                        <p className="text-sm text-muted-foreground">or click to browse files</p>
                                     </div>
+                                    <p className="text-xs text-muted-foreground">Supports JPG, PNG, HEIC, WebP up to 10MB</p>
                                 </div>
-                            ) : (
-                                <>
-                                    {/* Upload Options */}
-                                    <div className="grid gap-4 md:grid-cols-2">
-                                        {/* File Upload */}
-                                        <div
-                                            className={cn(
-                                                "relative border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer",
-                                                dragActive
-                                                    ? "border-primary bg-primary/5"
-                                                    : "border-muted-foreground/25 hover:border-muted-foreground/50",
-                                            )}
-                                            onDragEnter={handleDrag}
-                                            onDragLeave={handleDrag}
-                                            onDragOver={handleDrag}
-                                            onDrop={handleDrop}
-                                        >
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={handleFileInput}
-                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                                disabled={isUploading}
-                                            />
-                                            <div className="flex flex-col items-center gap-3">
-                                                <Upload className="h-8 w-8 text-muted-foreground" />
-                                                <div>
-                                                    <p className="font-medium">Upload from device</p>
-                                                    <p className="text-sm text-muted-foreground">Select an image file</p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Camera Capture */}
-                                        <div
-                                            className={cn(
-                                                "relative border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer",
-                                                isCameraLoading
-                                                    ? "border-muted-foreground/25 bg-muted"
-                                                    : "border-muted-foreground/25 hover:border-muted-foreground/50 hover:bg-muted/50"
-                                            )}
-                                            onClick={isCameraLoading ? undefined : startCamera}
-                                        >
-                                            <div className="flex flex-col items-center gap-3">
-                                                {isCameraLoading ? (
-                                                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                                                ) : (
-                                                    <Camera className="h-8 w-8 text-muted-foreground" />
-                                                )}
-                                                <div>
-                                                    <p className="font-medium">Take a photo</p>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        {isCameraLoading ? "Starting camera..." : "Use your camera"}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="text-center">
-                                        <p className="text-xs text-muted-foreground">
-                                            Supports JPG, PNG, HEIC, WebP up to 10MB
-                                        </p>
-                                    </div>
-                                </>
-                            )}
+                            </div>
 
                             <div className="space-y-2">
                                 <Label htmlFor="notes">Notes (optional)</Label>
