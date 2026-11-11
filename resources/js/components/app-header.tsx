@@ -26,6 +26,11 @@ const mainNavItems: NavItem[] = [
         href: '/receipts',
         icon: Ticket,
     },
+    {
+        title: 'Reports',
+        href: '/reports',
+        icon: Folder,
+    },
 ];
 
 const rightNavItems: NavItem[] = [

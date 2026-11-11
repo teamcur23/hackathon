@@ -7,7 +7,6 @@ use App\Models\MonthlySummary;
 use App\Models\Category;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -16,27 +15,27 @@ class ReportsController extends Controller
 {
     public function index(Request $request): Response
     {
-        $userId = Auth::user()->id;
-        $period = $request->get('period', '6months');
-
+        $userId = auth()->id();
+        $period = $request->get('period', 'all'); // Default to 'all'
+        
         // Calculate date range based on period
-        $dateRange = $this->getDateRange($period);
-
+        $dateRange = $this->getDateRange($period, $userId);
+        
         // Get monthly trends
         $monthlyTrends = $this->getMonthlyTrends($userId, $dateRange);
-
+        
         // Get category breakdown
         $categoryBreakdown = $this->getCategoryBreakdown($userId, $dateRange);
-
+        
         // Get spending statistics
         $statistics = $this->getSpendingStatistics($userId, $dateRange);
-
+        
         // Get top vendors
         $topVendors = $this->getTopVendors($userId, $dateRange);
-
+        
         // Get daily spending pattern
         $dailyPattern = $this->getDailySpendingPattern($userId, $dateRange);
-
+        
         return Inertia::render('Reports', [
             'monthlyTrends' => $monthlyTrends,
             'categoryBreakdown' => $categoryBreakdown,
@@ -53,12 +52,12 @@ class ReportsController extends Controller
 
     public function export(Request $request)
     {
-        $userId = Auth::user()->id;
-        $period = $request->get('period', '6months');
+        $userId = auth()->id();
+        $period = $request->get('period', 'all'); // Default to 'all'
         $format = $request->get('format', 'csv');
-
-        $dateRange = $this->getDateRange($period);
-
+        
+        $dateRange = $this->getDateRange($period, $userId);
+        
         $receipts = Receipt::forUser($userId)
             ->with(['category'])
             ->whereBetween('receipt_date', [$dateRange['start'], $dateRange['end']])
@@ -68,22 +67,28 @@ class ReportsController extends Controller
         if ($format === 'csv') {
             return $this->exportToCsv($receipts);
         }
-
+        
         return $this->exportToPdf($receipts, $dateRange);
     }
 
-    private function getDateRange(string $period): array
+    private function getDateRange(string $period, int $userId = null): array
     {
         $end = now();
-
-        $start = match ($period) {
-            '1month' => now()->subMonth(),
-            '3months' => now()->subMonths(3),
-            '6months' => now()->subMonths(6),
-            '1year' => now()->subYear(),
-            default => now()->subMonths(6)
-        };
-
+        $start = null;
+        if ($period === 'all' && $userId) {
+            $first = \App\Models\Receipt::forUser($userId)->orderBy('receipt_date')->first();
+            $last = \App\Models\Receipt::forUser($userId)->orderByDesc('receipt_date')->first();
+            $start = $first?->receipt_date ? \Carbon\Carbon::parse($first->receipt_date) : now();
+            $end = $last?->receipt_date ? \Carbon\Carbon::parse($last->receipt_date) : now();
+        } else {
+            $start = match($period) {
+                '1month' => now()->subMonth(),
+                '3months' => now()->subMonths(3),
+                '6months' => now()->subMonths(6),
+                '1year' => now()->subYear(),
+                default => now()->subMonths(6)
+            };
+        }
         return ['start' => $start, 'end' => $end];
     }
 
@@ -94,14 +99,14 @@ class ReportsController extends Controller
                 $query->where('year', '>', $dateRange['start']->year)
                     ->orWhere(function ($q) use ($dateRange) {
                         $q->where('year', $dateRange['start']->year)
-                            ->where('month', '>=', $dateRange['start']->month);
+                          ->where('month', '>=', $dateRange['start']->month);
                     });
             })
             ->where(function ($query) use ($dateRange) {
                 $query->where('year', '<', $dateRange['end']->year)
                     ->orWhere(function ($q) use ($dateRange) {
                         $q->where('year', $dateRange['end']->year)
-                            ->where('month', '<=', $dateRange['end']->month);
+                          ->where('month', '<=', $dateRange['end']->month);
                     });
             })
             ->orderBy('year')
@@ -251,20 +256,19 @@ class ReportsController extends Controller
             ->processed()
             ->whereBetween('receipt_date', [$dateRange['start'], $dateRange['end']])
             ->select(
-                DB::raw('DAYNAME(receipt_date) as day_name'),
-                DB::raw('DAYOFWEEK(receipt_date) as day_number'),
-                DB::raw('AVG(amount) as average_amount'),
-                DB::raw('COUNT(*) as transaction_count')
+                DB::raw('DATE(receipt_date) as date'),
+                DB::raw('SUM(amount) as total'),
+                DB::raw('COUNT(*) as count')
             )
-            ->groupBy('day_name', 'day_number')
-            ->orderBy('day_number')
+            ->groupBy('date')
+            ->orderBy('date')
             ->get();
 
-        return $dailyData->map(function ($day) {
+        return $dailyData->map(function ($row) {
             return [
-                'day' => $day->day_name,
-                'average' => (float) $day->average_amount,
-                'count' => $day->transaction_count
+                'date' => $row->date,
+                'total' => (float) $row->total,
+                'count' => $row->count,
             ];
         })->toArray();
     }
@@ -272,24 +276,18 @@ class ReportsController extends Controller
     private function exportToCsv($receipts)
     {
         $filename = 'expense-report-' . now()->format('Y-m-d') . '.csv';
-
+        
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function () use ($receipts) {
+        $callback = function() use ($receipts) {
             $file = fopen('php://output', 'w');
-
+            
             // CSV headers
             fputcsv($file, [
-                'Date',
-                'Vendor',
-                'Category',
-                'Amount',
-                'Status',
-                'Confidence',
-                'Notes'
+                'Date', 'Vendor', 'Category', 'Amount', 'Status', 'Confidence', 'Notes'
             ]);
 
             // CSV data

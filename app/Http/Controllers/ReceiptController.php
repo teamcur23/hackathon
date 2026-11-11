@@ -167,7 +167,7 @@ class ReceiptController extends Controller
         }
 
         $receipt->update(['status' => 'pending']);
-        ProcessReceiptJob::dispatch($receipt);
+        App\Http\Controllers\ProcessReceiptJob::dispatch($receipt);
 
         return back()->with('success', 'Receipt reprocessing started.');
     }
